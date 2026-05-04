@@ -1,0 +1,798 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "epik v1.0",
+   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "epik",
+   LoadingSubtitle = "by aufa",
+   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+      
+   DisableRayfieldPrompts = true,
+   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Big Hub"
+   },
+
+   Discord = {
+      Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+   },
+
+   KeySystem = true, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "native",
+      Subtitle = "Key System",
+      Note = "key (apaaja)", -- Use this to tell the user how to get a key
+      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"https://raw.githubusercontent.com/aufa0607/p/refs/heads/main/key"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
+})
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local roles
+local SheriffAlive = true
+local HeroAlive = true
+
+-- > Functions <--
+
+function NotifySheriffDeath() -- Notification when sheriff dies
+	Rayfield:Notify({
+   Title = "sheriff die",
+   Content = "nice",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+end
+
+function IsAlive(Player) -- Check if player is alive
+	for i, v in pairs(roles) do
+		if Player.Name == i then
+			if not v.Killed and not v.Dead then
+				return true
+			else
+				return false
+			end
+		end
+	end
+end
+
+-- > Loops < --
+
+RunService.RenderStepped:connect(function()
+	roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+	local Sheriff = nil
+	local Hero = nil
+	
+	-- Find sheriff
+	for i, v in pairs(roles) do
+		if v.Role == "Sheriff" then
+			Sheriff = i
+			break
+		end
+	end
+	
+	-- Find hero
+	for i, v in pairs(roles) do
+		if v.Role == "Hero" then
+			Hero = i
+			break
+		end
+	end
+	
+	-- Check if sheriff died
+	if Sheriff and not IsAlive(game.Players[Sheriff]) then
+		if SheriffAlive then
+			Rayfield:Notify({
+   Title = "sheriff die",
+   Content = "GO get the gun before other people get it",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+			SheriffAlive = false
+		end
+	elseif Sheriff and IsAlive(game.Players[Sheriff]) then
+		SheriffAlive = true
+	end
+	
+	-- Check if hero died
+	if Hero and not IsAlive(game.Players[Hero]) then
+		if HeroAlive then
+			Rayfield:Notify({
+   Title = "hero die",
+   Content = "GO get the gun before other people get it",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+			HeroAlive = false
+		end
+	elseif Hero and IsAlive(game.Players[Hero]) then
+		HeroAlive = true
+	end
+end)
+
+-----------------------------------
+
+
+
+-- > Declarations < --
+
+local GunDrop
+local Sheriff
+local Hero
+
+-- > Functions < --
+
+function UpdateGunDropHighlight()
+	if GunDrop and not GunDrop:FindFirstChild("Highlight") then
+		Instance.new("Highlight", GunDrop)
+	end
+	if GunDrop and GunDrop:FindFirstChild("Highlight") then
+		local highlight = GunDrop:FindFirstChild("Highlight")
+		if (Sheriff and not IsAlive(game.Players[Sheriff])) or (Hero and not IsAlive(game.Players[Hero])) then
+			highlight.FillColor = Color3.fromRGB(255, 215, 0) -- Gold color
+			highlight.FillTransparency = 0
+		else
+			highlight.FillTransparency = 1
+		end
+	end
+end
+
+function IsAlive(Player) -- Simple sexy function
+	for i, v in pairs(roles) do
+		if Player.Name == i then
+			if not v.Killed and not v.Dead then
+				return true
+			else
+				return false
+			end
+		end
+	end
+end
+
+
+-- > Loops < --
+
+RunService.RenderStepped:connect(function()
+	roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+	Sheriff = nil
+	Hero = nil
+	for i, v in pairs(roles) do
+		if v.Role == 'Sheriff' then
+			Sheriff = i
+		elseif v.Role == 'Hero' then
+			Hero = i
+		end
+	end
+	-- Find GunDrop
+	local workspace = game:GetService("Workspace")
+	local mapNames = {
+		"GunDrop",
+		"Workshop",
+		"Mansion2",
+		"MilBase",
+		"Hotel",
+		"Factory",
+		"Station",
+		"BioLab",
+		"Bank2",
+		"House2",
+		"IceCastle"
+	}
+	local mapname
+	for _, name in ipairs(mapNames) do
+		if workspace:FindFirstChild(name) then
+			mapname = name
+			break
+		end
+	end
+	if mapname then
+		GunDrop = workspace[mapname].GunDrop
+	end
+	UpdateGunDropHighlight()
+end)
+
+--------------------------------
+
+function teleport(teleportplace)
+  local player = game.Players.LocalPlayer
+  player.Character.HumanoidRootPart.CFrame = teleportplace
+end
+
+local Players = game:GetService("Players")
+
+local function getPlayerNames()
+   local names = {}
+   for _, player in ipairs(Players:GetPlayers()) do
+      table.insert(names, player.Name)
+   end
+   return names
+end
+
+local function findGunDropCFrame()
+   local workspace = game:GetService("Workspace")
+   local mapNames = {
+      "GunDrop",
+      "Workshop",
+      "Mansion2",
+      "MilBase",
+      "Hotel",
+      "Factory",
+      "Station",
+      "BioLab",
+      "Bank2",
+      "House2",
+      "IceCastle"
+   }
+
+   for _, name in ipairs(mapNames) do
+      local part = workspace:FindFirstChild(name)
+      if part then
+         if part:IsA("BasePart") then
+            return part.CFrame
+         end
+         local gunDrop = part:FindFirstChild("GunDrop")
+         if gunDrop and gunDrop:IsA("BasePart") then
+            return gunDrop.CFrame
+         end
+      end
+   end
+   return nil
+end
+
+EsP = false
+speed = false
+sped = false
+time2 = false
+loop = false
+time3 = false
+time4 = 0
+sped1 = 16
+
+local Noclip = nil
+local Clip = nil
+
+function noclip()
+	Clip = false
+	local function Nocl()
+		if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+			for _,v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+				if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+					v.CanCollide = false
+				end
+			end
+		end
+		wait(0.21) -- basic optimization
+	end
+	Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+end
+
+function clip()
+	if Noclip then Noclip:Disconnect() end
+	Clip = true
+end
+
+
+Rayfield:Notify({
+   Title = "look",
+   Content = "nice",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+
+local mainTab = Window:CreateTab("🏠main", nil) -- Title, Image
+local Section = mainTab:CreateSection("main")
+
+local Dropdown = mainTab:CreateDropdown({
+   Name = "boost",
+   Options = {"super Slow", "slow", "Normal", "my favorite", "fast", "super fast"},
+   CurrentOption = {"Normal"},
+   MultipleOptions = false,
+   Flag = "Dropdown1", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Options)
+   speed1 = Options[1]
+   Rayfield:Notify({
+   Title = "boost set to " .. speed1,
+   Content = "nice",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+   if speed1 == "super Slow" then
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 8
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 30
+      sped1 = 8
+   elseif speed1 == "slow" then
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 12
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 40
+      sped1 = 12
+   elseif speed1 == "Normal" then
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 50
+      sped1 = 16
+   elseif speed1 == "my favorite" then
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 17
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 53
+      sped1 = 17
+   elseif speed1 == "fast" then
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 20
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 60
+      sped1 = 20
+   elseif speed1 == "super fast" then
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 25
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 70
+      sped1 = 25
+   end
+   end,
+})
+
+local Toggle = mainTab:CreateToggle({
+   Name = "NoClip",
+   CurrentValue = false,
+   Flag = "NoClip", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Noclip)
+   if Noclip then
+    noclip()
+   else
+    clip()
+   end
+   end
+})
+
+local Dropdown = mainTab:CreateDropdown({
+   Name = "Players",
+   Options = getPlayerNames(),
+   CurrentOption = {Players.LocalPlayer and Players.LocalPlayer.Name or ""},
+   MultipleOptions = false,
+   Flag = "TPP", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Options)
+   TPP = Options[1]
+   print(TPP)
+   end,
+})
+
+Players.PlayerAdded:Connect(function()
+   if Dropdown and Dropdown.SetOptions then
+      Dropdown:SetOptions(getPlayerNames())
+   end
+end)
+
+Players.PlayerRemoving:Connect(function()
+   if Dropdown and Dropdown.SetOptions then
+      Dropdown:SetOptions(getPlayerNames())
+   end
+end)
+
+local Button = mainTab:CreateButton({
+   Name = "teleport to player",
+   Callback = function()
+  local p1 = game.Players.LocalPlayer.Character.HumanoidRootPart
+local p2 = (TPP)
+local pos = p1.CFrame
+
+p1.CFrame = game.Players[p2].Character.HumanoidRootPart.CFrame
+   end,
+})
+
+local Button = mainTab:CreateButton({
+   Name = "speed boost(from dropdown)",
+   Callback = function()
+       if speed == false then
+      Rayfield:Notify({
+   Title = "[" .. speeds .. " for " .. time .. " seconds]",
+   Content = "Speed Boost Activated",
+   Duration = 2,
+   Image = 4483362458,
+})
+   if time == "2" then
+   time4 = 1 
+   elseif time == "5" then
+   time4 = 4
+   elseif time == "10" then
+   time4 = 9
+   elseif time == "30" then
+   time4 = 29
+   end
+   
+   wait(0.1)
+   if speeds == "Speed I" and speed == false then
+      speed = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 4
+      time1 = 5 + time4
+      time3 = true
+      wait(time)
+      time3 = false
+      time2 = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1
+                     Rayfield:Notify({
+   Title = "boost on cooldown",
+   Content = "pls wait paciently",
+   Duration = 2,
+   Image = 4483362458,
+})
+      wait(time1)
+                  Rayfield:Notify({
+   Title = "boost ready",
+   Content = "nice",
+   Duration = 2,
+   Image = 4483362458,
+})
+      time2 = false
+      speed = false
+   elseif speeds == "Speed II" and speed == false then
+      speed = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 9
+      time1 = 7 + time4
+      time3 = true
+      wait(time)
+      time3 = false
+      time2 = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1
+                          Rayfield:Notify({
+   Title = "boost on cooldown",
+   Content = "pls wait paciently",
+   Duration = 2,
+   Image = 4483362458,
+})
+      wait(time1)
+                  Rayfield:Notify({
+   Title = "boost ready",
+   Content = "nice",
+   Duration = 2,
+   Image = 4483362458,
+})
+      time2 = false
+      speed = false
+   elseif speeds == "Speed III" and speed == false then
+      speed = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 14
+      time1 = 10 + time4 
+      time3 = true
+      wait(time)
+      time3 = false
+      time2 = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1
+                          Rayfield:Notify({
+   Title = "boost on cooldown",
+   Content = "pls wait paciently",
+   Duration = 2,
+   Image = 4483362458,
+})
+      wait(time1)
+            Rayfield:Notify({
+   Title = "boost ready",
+   Content = "nice",
+   Duration = 2,
+   Image = 4483362458,
+})
+      time2 = false
+      speed = false
+   end
+   
+elseif time2 == true then
+    Rayfield:Notify({
+   Title = "cooldown for " .. time1 .. " seconds",
+   Content = "its not countdown for the boost but you have to wait until you can use it again",
+   Duration = 2,
+   Image = 4483362458,
+})
+
+elseif time3 == true then
+     Rayfield:Notify({
+   Title = "you already used the boost",
+   Content = "",
+   Duration = 2,
+   Image = 4483362458,
+})
+end
+   end,
+})
+
+local Button = mainTab:CreateButton({
+   Name = "inf yeld",
+   Callback = function()
+   loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+   end,
+})
+
+local pcTab = Window:CreateTab("💻For pc player", nil) -- Title, Image
+local Section = pcTab:CreateSection("speed boost")
+
+local Dropdown = pcTab:CreateDropdown({
+   Name = "Speed Options",
+   Options = {"Speed I", "Speed II", "Speed III"},
+   CurrentOption = {"Speed I"},
+   MultipleOptions = false,
+   Flag = "Speed", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Options)
+   speeds = Options[1]
+   end,
+})
+
+local Dropdown = pcTab:CreateDropdown({
+   Name = "Duration Options(seconds)",
+   Options = {"2", "5", "10", "30"},
+   CurrentOption = {"2"},
+   MultipleOptions = false,
+   Flag = "timer", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Optionss)
+   time = Optionss[1] 
+   end,
+})
+
+local Keybind = pcTab:CreateKeybind({
+   Name = "speed boost",
+   CurrentKeybind = "",
+   HoldToInteract = false,
+   Flag = "speed", -- A flag is the identifier for the configuration file. Make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Keybind)
+      if speed == false then
+      Rayfield:Notify({
+   Title = "[" .. speeds .. " for " .. time .. " seconds]",
+   Content = "Speed Boost Activated",
+   Duration = 2,
+   Image = 4483362458,
+})
+   if time == "2" then
+   time4 = 1 
+   elseif time == "5" then
+   time4 = 4
+   elseif time == "10" then
+   time4 = 9
+   elseif time == "30" then
+   time4 = 29
+   end
+   
+   wait(0.1)
+    if speeds == "Speed I" and speed == false then
+      speed = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 4
+      time1 = 5 + time4
+      time3 = true
+      wait(time)
+      time3 = false
+      time2 = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1
+                     Rayfield:Notify({
+   Title = "boost on cooldown",
+   Content = "pls wait paciently",
+   Duration = 2,
+   Image = 4483362458,
+})
+      wait(time1)
+                  Rayfield:Notify({
+   Title = "boost ready",
+   Content = "nice",
+   Duration = 2,
+   Image = 4483362458,
+})
+      time2 = false
+      speed = false
+   elseif speeds == "Speed II" and speed == false then
+      speed = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 9
+      time1 = 7 + time4
+      time3 = true
+      wait(time)
+      time3 = false
+      time2 = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1
+                          Rayfield:Notify({
+   Title = "boost on cooldown",
+   Content = "pls wait paciently",
+   Duration = 2,
+   Image = 4483362458,
+})
+      wait(time1)
+                  Rayfield:Notify({
+   Title = "boost ready",
+   Content = "nice",
+   Duration = 2,
+   Image = 4483362458,
+})
+      time2 = false
+      speed = false
+   elseif speeds == "Speed III" and speed == false then
+      speed = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 14
+      time1 = 10 + time4 
+      time3 = true
+      wait(time)
+      time3 = false
+      time2 = true
+      game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1
+                          Rayfield:Notify({
+   Title = "boost on cooldown",
+   Content = "pls wait paciently",
+   Duration = 2,
+   Image = 4483362458,
+})
+      wait(time1)
+            Rayfield:Notify({
+   Title = "boost ready",
+   Content = "nice",
+   Duration = 2,
+   Image = 4483362458,
+})
+      time2 = false
+      speed = false
+   end
+   
+elseif time2 == true then
+    Rayfield:Notify({
+   Title = "cooldown for " .. time1 .. " seconds",
+   Content = "its not countdown for the boost but you have to wait until you can use it again",
+   Duration = 2,
+   Image = 4483362458,
+})
+
+elseif time3 == true then
+     Rayfield:Notify({
+   Title = "you already used the boost",
+   Content = "",
+   Duration = 2,
+   Image = 4483362458,
+})
+end
+   end,
+})
+
+local murTab = Window:CreateTab("🗡️mm2", nil) -- Title, Image
+local Section = murTab:CreateSection("esp")
+
+local Button = murTab:CreateButton({
+   Name = "esp",
+   Callback = function()
+      if EsP == false then
+      Rayfield:Notify({
+            Title = "ESP turned on",
+            Content = "You Cant Turn It Off(rejoin the game if you want)",
+            Duration = 5,
+            Image = 4483362458,
+         })
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/Ihaveash0rtnamefordiscord/Releases/main/MurderMystery2HighlightESP"))();
+          EsP = true
+      else
+         Rayfield:Notify({
+            Title = "ESP is already on",
+            Content = "You Cant Turn It Off(rejoin the game if you want)",
+            Duration = 5,
+            Image = 4483362458,
+         })
+      end
+   end,
+})
+
+local Section = murTab:CreateSection("tp to gun")
+
+local Button = murTab:CreateButton({
+   Name = "tp to gun drop",
+   Callback = function()
+      local P3 = game.Players.LocalPlayer.Character.HumanoidRootPart
+      local cf = findGunDropCFrame()
+      local pos = P3.CFrame
+      if cf then
+         teleport(cf)
+         wait(0.05)
+         P3.CFrame = pos
+      else
+         Rayfield:Notify({
+            Title = "GunDrop not found",
+            Content = "This MM2 map may not be supported or another player take it",
+            Duration = 5,
+            Image = 4483362458,
+         })
+      end
+   end,
+})
+
+local Keybind = murTab:CreateKeybind({
+   Name = "Select key for tp to gun",
+   CurrentKeybind = "E",
+   HoldToInteract = false,
+   Flag = "Gun", -- A flag is the identifier for the configuration file. Make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Keybind)
+      local P3 = game.Players.LocalPlayer.Character.HumanoidRootPart
+      local cf = findGunDropCFrame()
+      local pos = P3.CFrame
+      if cf then
+         teleport(cf)
+         wait(0.05)
+         P3.CFrame = pos
+      else
+         Rayfield:Notify({
+            Title = "GunDrop not found",
+            Content = "This MM2 map may not be supported or another player take it",
+            Duration = 5,
+            Image = 4483362458,
+         })
+      end
+   end,
+})
+
+local Section = murTab:CreateSection("player")
+
+local Slider = murTab:CreateSlider({
+   Name = "speed mm2",
+   Range = {0, 25},
+   Increment = 1,
+   Suffix = "speed",
+   CurrentValue = 16,
+   Flag = "Slider2", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Speed2)
+  game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (Speed2)
+   end,
+})
+
+local Button = murTab:CreateButton({
+   Name = "lobby",
+   Callback = function()
+  teleport(game:GetService("Workspace").Lobby.Leaderboards.GiftsLeaderboard.LeaderboardPart.CFrame)
+   end,
+})
+
+local spdTab = Window:CreateTab("⚡Speed City", nil) -- Title, Image
+local Section = spdTab:CreateSection("teleport")
+
+local Keybind = spdTab:CreateKeybind({
+   Name = "black orb",
+   CurrentKeybind = "Q",
+   HoldToInteract = false,
+   Flag = "Keybind1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Keybind)
+      while true do
+   teleport(game:GetService("Workspace").GhostCity.GhostOrbsMega.GhostMega2.Outside.CFrame)
+   wait(0)
+      end
+   end,
+})
+
+local sptTab = Window:CreateTab("🔑Keyless Script", nil) -- Title, Image
+local Section = sptTab:CreateSection("All SCript")
+
+local Button = sptTab:CreateButton({
+   Name = "Bubble Gum Smoke",
+   Callback = function()
+         Rayfield:Notify({
+   Title = "Launch Smoke",
+   Content = "Nice",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+   loadstring(game:HttpGet('https://raw.githubusercontent.com/etqjuyreal/smoke/refs/heads/main/bgsi.lua'))()
+   end,
+})
+
+local Button = sptTab:CreateButton({
+   Name = "flood escape 2",
+   Callback = function()
+      Rayfield:Notify({
+   Title = "Launch flood escape 2 script",
+   Content = "Nice",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+loadstring(game:HttpGet("https://rawscripts.net/raw/LUMINANCE-Flood-Escape-2-Flood-Escape-2-Quickest-Auto-Farm-and-Lost-Page-and-Escapee-49056"))()
+   end,
+})
+
+local Button = sptTab:CreateButton({
+   Name = "coming soon",
+   Callback = function()
+Rayfield:Notify({
+   Title = "coming soon",
+   Content = "in progress",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+   end,
+})
+
+
+Rayfield:LoadConfiguration()
