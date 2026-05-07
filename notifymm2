@@ -1,0 +1,84 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local roles
+local SheriffAlive = true
+local HeroAlive = true
+
+-- > Functions <--
+
+function NotifySheriffDeath() -- Notification when sheriff dies
+	Rayfield:Notify({
+   Title = "sheriff die",
+   Content = "nice",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+end
+
+function IsAlive(Player) -- Check if player is alive
+	for i, v in pairs(roles) do
+		if Player.Name == i then
+			if not v.Killed and not v.Dead then
+				return true
+			else
+				return false
+			end
+		end
+	end
+end
+
+-- > Loops < --
+
+RunService.RenderStepped:connect(function()
+	roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+	local Sheriff = nil
+	local Hero = nil
+	
+	-- Find sheriff
+	for i, v in pairs(roles) do
+		if v.Role == "Sheriff" then
+			Sheriff = i
+			break
+		end
+	end
+	
+	-- Find hero
+	for i, v in pairs(roles) do
+		if v.Role == "Hero" then
+			Hero = i
+			break
+		end
+	end
+	
+	-- Check if sheriff died
+	if Sheriff and not IsAlive(game.Players[Sheriff]) then
+		if SheriffAlive then
+			Rayfield:Notify({
+   Title = "sheriff die",
+   Content = "GO get the gun before other people get it",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+			SheriffAlive = false
+		end
+	elseif Sheriff and IsAlive(game.Players[Sheriff]) then
+		SheriffAlive = true
+	end
+	
+	-- Check if hero died
+	if Hero and not IsAlive(game.Players[Hero]) then
+		if HeroAlive then
+			Rayfield:Notify({
+   Title = "hero die",
+   Content = "GO get the gun before other people get it",
+   Duration = 6.5,
+   Image = 4483362458,
+})
+			HeroAlive = false
+		end
+	elseif Hero and IsAlive(game.Players[Hero]) then
+		HeroAlive = true
+	end
+end)
