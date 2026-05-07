@@ -33,173 +33,8 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LP = Players.LocalPlayer
-local roles
-local SheriffAlive = true
-local HeroAlive = true
-
--- > Functions <--
-
-function NotifySheriffDeath() -- Notification when sheriff dies
-	Rayfield:Notify({
-   Title = "sheriff die",
-   Content = "nice",
-   Duration = 6.5,
-   Image = 4483362458,
-})
-end
-
-function IsAlive(Player) -- Check if player is alive
-	for i, v in pairs(roles) do
-		if Player.Name == i then
-			if not v.Killed and not v.Dead then
-				return true
-			else
-				return false
-			end
-		end
-	end
-end
-
--- > Loops < --
-
-RunService.RenderStepped:connect(function()
-	roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
-	local Sheriff = nil
-	local Hero = nil
-	
-	-- Find sheriff
-	for i, v in pairs(roles) do
-		if v.Role == "Sheriff" then
-			Sheriff = i
-			break
-		end
-	end
-	
-	-- Find hero
-	for i, v in pairs(roles) do
-		if v.Role == "Hero" then
-			Hero = i
-			break
-		end
-	end
-	
-	-- Check if sheriff died
-	if Sheriff and not IsAlive(game.Players[Sheriff]) then
-		if SheriffAlive then
-			Rayfield:Notify({
-   Title = "sheriff die",
-   Content = "GO get the gun before other people get it",
-   Duration = 6.5,
-   Image = 4483362458,
-})
-			SheriffAlive = false
-		end
-	elseif Sheriff and IsAlive(game.Players[Sheriff]) then
-		SheriffAlive = true
-	end
-	
-	-- Check if hero died
-	if Hero and not IsAlive(game.Players[Hero]) then
-		if HeroAlive then
-			Rayfield:Notify({
-   Title = "hero die",
-   Content = "GO get the gun before other people get it",
-   Duration = 6.5,
-   Image = 4483362458,
-})
-			HeroAlive = false
-		end
-	elseif Hero and IsAlive(game.Players[Hero]) then
-		HeroAlive = true
-	end
-end)
-
------------------------------------
-
-
-
--- > Declarations < --
-
-local GunDrop
-local Sheriff
-local Hero
-
--- > Functions < --
-
-function UpdateGunDropHighlight()
-	if GunDrop and not GunDrop:FindFirstChild("Highlight") then
-		Instance.new("Highlight", GunDrop)
-	end
-	if GunDrop and GunDrop:FindFirstChild("Highlight") then
-		local highlight = GunDrop:FindFirstChild("Highlight")
-		if (Sheriff and not IsAlive(game.Players[Sheriff])) or (Hero and not IsAlive(game.Players[Hero])) then
-			highlight.FillColor = Color3.fromRGB(255, 215, 0) -- Gold color
-			highlight.FillTransparency = 0
-		else
-			highlight.FillTransparency = 1
-		end
-	end
-end
-
-function IsAlive(Player) -- Simple sexy function
-	for i, v in pairs(roles) do
-		if Player.Name == i then
-			if not v.Killed and not v.Dead then
-				return true
-			else
-				return false
-			end
-		end
-	end
-end
-
-
--- > Loops < --
-
-RunService.RenderStepped:connect(function()
-	roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
-	Sheriff = nil
-	Hero = nil
-	for i, v in pairs(roles) do
-		if v.Role == 'Sheriff' then
-			Sheriff = i
-		elseif v.Role == 'Hero' then
-			Hero = i
-		end
-	end
-	-- Find GunDrop
-	local workspace = game:GetService("Workspace")
-	local mapNames = {
-		"GunDrop",
-		"Workshop",
-		"Mansion2",
-		"MilBase",
-		"Hotel",
-		"Factory",
-		"Station",
-		"BioLab",
-		"Bank2",
-		"House2",
-		"IceCastle"
-	}
-	local mapname
-	for _, name in ipairs(mapNames) do
-		if workspace:FindFirstChild(name) then
-			mapname = name
-			break
-		end
-	end
-	if mapname then
-		GunDrop = workspace[mapname].GunDrop
-	end
-	UpdateGunDropHighlight()
-end)
-
 --------------------------------
+
 
 function teleport(teleportplace)
   local player = game.Players.LocalPlayer
@@ -255,6 +90,10 @@ loop = false
 time3 = false
 time4 = 0
 sped1 = 16
+timer = false
+notify1 = false
+dienotify = false
+Gunesp = false
 
 local Noclip = nil
 local Clip = nil
@@ -357,18 +196,6 @@ local Dropdown = mainTab:CreateDropdown({
    end,
 })
 
-Players.PlayerAdded:Connect(function()
-   if Dropdown and Dropdown.SetOptions then
-      Dropdown:SetOptions(getPlayerNames())
-   end
-end)
-
-Players.PlayerRemoving:Connect(function()
-   if Dropdown and Dropdown.SetOptions then
-      Dropdown:SetOptions(getPlayerNames())
-   end
-end)
-
 local Button = mainTab:CreateButton({
    Name = "teleport to player",
    Callback = function()
@@ -383,7 +210,7 @@ p1.CFrame = game.Players[p2].Character.HumanoidRootPart.CFrame
 local Button = mainTab:CreateButton({
    Name = "speed boost(from dropdown)",
    Callback = function()
-       if speed == false then
+     if speed == false then
       Rayfield:Notify({
    Title = "[" .. speeds .. " for " .. time .. " seconds]",
    Content = "Speed Boost Activated",
@@ -401,7 +228,7 @@ local Button = mainTab:CreateButton({
    end
    
    wait(0.1)
-   if speeds == "Speed I" and speed == false then
+    if speeds == "Speed I" and speed == false then
       speed = true
       game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = sped1 + 4
       time1 = 5 + time4
@@ -494,6 +321,7 @@ end
    end,
 })
 
+
 local Button = mainTab:CreateButton({
    Name = "inf yeld",
    Callback = function()
@@ -512,6 +340,13 @@ local Dropdown = pcTab:CreateDropdown({
    Flag = "Speed", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
    Callback = function(Options)
    speeds = Options[1]
+   if speeds == "Speed I" then
+   time5 = 5 
+   elseif speeds == "Speed II" then
+   time5 = 7
+   elseif speeds == "Speed III" then
+   time5 = 10
+   end
    end,
 })
 
@@ -523,6 +358,15 @@ local Dropdown = pcTab:CreateDropdown({
    Flag = "timer", -- A flag is the identifier for the configuration file; make sure every element has a different flag if you're using configuration saving to ensure no overlaps
    Callback = function(Optionss)
    time = Optionss[1] 
+   if time == "2" then
+   time4 = 1 
+   elseif time == "5" then
+   time4 = 4
+   elseif time == "10" then
+   time4 = 9
+   elseif time == "30" then
+   time4 = 29
+   end
    end,
 })
 
@@ -644,6 +488,54 @@ end
 })
 
 local murTab = Window:CreateTab("🗡️mm2", nil) -- Title, Image
+local Section = murTab:CreateSection("main")
+
+local Button = murTab:CreateButton({
+   Name = "sheriff/hero die notify",
+   Callback = function()
+   if dienotify == false then
+      dienotify = true
+      Rayfield:Notify({
+            Title = "notification is turned on",
+            Content = "You Cant Turn It Off(rejoin the game if you want)",
+            Duration = 2,
+            Image = 4483362458,
+         })
+      loadstring(game:HttpGet('https://raw.githubusercontent.com/aufarifvi08-oss/epik/refs/heads/main/notifymm2'))()
+   else
+      Rayfield:Notify({
+            Title = "notification is already turned on",
+            Content = "You Cant Turn It Off(rejoin the game if you want)",
+            Duration = 2,
+            Image = 4483362458,
+         })
+   end
+   end,
+})
+
+local Button = murTab:CreateButton({
+   Name = "Gun ESP",
+   Callback = function()
+   if Gunesp == false then
+      Gunesp = true
+      Rayfield:Notify({
+            Title = "Gun ESP is turned on",
+            Content = "You Cant Turn It Off(rejoin the game if you want)",
+            Duration = 2,
+            Image = 4483362458,
+         })
+      loadstring(game:HttpGet('https://raw.githubusercontent.com/aufarifvi08-oss/epik/refs/heads/main/GunEsp'))()
+   else
+      Rayfield:Notify({
+            Title = "Gun ESP is already turned on",
+            Content = "You Cant Turn It Off(rejoin the game if you want)",
+            Duration = 2,
+            Image = 4483362458,
+         })
+   end
+   end,
+})
+
 local Section = murTab:CreateSection("esp")
 
 local Button = murTab:CreateButton({
