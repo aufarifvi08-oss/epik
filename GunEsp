@@ -1,0 +1,79 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local roles
+local GunDrop
+local Sheriff
+local Hero
+
+-- > Functions < --
+
+function UpdateGunDropHighlight()
+	if GunDrop and not GunDrop:FindFirstChild("Highlight") then
+		Instance.new("Highlight", GunDrop)
+	end
+	if GunDrop and GunDrop:FindFirstChild("Highlight") then
+		local highlight = GunDrop:FindFirstChild("Highlight")
+		if (Sheriff and not IsAlive(game.Players[Sheriff])) or (Hero and not IsAlive(game.Players[Hero])) then
+			highlight.FillColor = Color3.fromRGB(255, 215, 0) -- Gold color
+			highlight.FillTransparency = 0
+		else
+			highlight.FillTransparency = 1
+		end
+	end
+end
+
+function IsAlive(Player) -- Simple sexy function
+	for i, v in pairs(roles) do
+		if Player.Name == i then
+			if not v.Killed and not v.Dead then
+				return true
+			else
+				return false
+			end
+		end
+	end
+end
+
+
+-- > Loops < --
+
+RunService.RenderStepped:connect(function()
+	roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+	Sheriff = nil
+	Hero = nil
+	for i, v in pairs(roles) do
+		if v.Role == 'Sheriff' then
+			Sheriff = i
+		elseif v.Role == 'Hero' then
+			Hero = i
+		end
+	end
+	-- Find GunDrop
+	local workspace = game:GetService("Workspace")
+	local mapNames = {
+		"GunDrop",
+		"Workshop",
+		"Mansion2",
+		"MilBase",
+		"Hotel",
+		"Factory",
+		"Station",
+		"BioLab",
+		"Bank2",
+		"House2",
+		"IceCastle"
+	}
+	local mapname
+	for _, name in ipairs(mapNames) do
+		if workspace:FindFirstChild(name) then
+			mapname = name
+			break
+		end
+	end
+	if mapname then
+		GunDrop = workspace[mapname].GunDrop
+	end
+	UpdateGunDropHighlight()
+end)
